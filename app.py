@@ -5,6 +5,7 @@ import string
 horizontal_letters = range(1, 11)
 vertical_letters = string.ascii_uppercase
 
+game_state = True
 
 class Board:
     def __init__(self):
@@ -93,6 +94,27 @@ def render_input():
     except Exception as msg:
         print(msg)
 
+    return val
+
+
+def game_over():
+    print('Game Over!')
+    # TODO: print stats
+
+
+def main_loop():
+    global game_state
+    a = 0
+    while game_state:
+        val = render_input()
+
+        # Temporal code to simulate game over
+        if a == 3:
+            game_state = False
+        a += 1
+    else:
+        game_over()
+
 
 def init_game():
     board = Board()
@@ -101,7 +123,7 @@ def init_game():
     print("Let's play Battleship!")
 
     board.render()
-    render_input()
+    main_loop()
 
 
 if __name__ == '__main__':
