@@ -53,7 +53,8 @@ class Board:
 
     def reveal(self):
         """Show ship position command - aids in debugging"""
-        pass
+
+        print('Show me magic...')
 
     def construct_battleship(self):
         sqrs = 5
@@ -127,6 +128,11 @@ class Menu:
         self.game.endgame()
         sys.exit(0)
 
+    def cheat_cmd(self):
+        """cheat - Reveal enemy'e ships."""
+
+        self.game.cheat()
+
     def help_cmd(self):
         """help - app usage"""
 
@@ -139,8 +145,9 @@ class Menu:
 
         self.cmds = {
             'end': self.endgame_cmd,
-            'restart': self.restart_game_cmd(),
+            'restart': self.restart_game_cmd,
             'exit': self.exit_app_cmd,
+            'cheat': self.cheat_cmd,
             'help': self.help_cmd,
         }
 
@@ -166,6 +173,9 @@ class Game:
 
         self.board.reset()
         self.player.reset()
+
+    def cheat(self):
+        self.board.reveal()
 
     def game_over(self):
         print('Game Over!')
