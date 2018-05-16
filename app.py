@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import re
 import string
+import sys
 
 horizontal_letters = range(1, 11)
 vertical_letters = string.ascii_uppercase
@@ -94,17 +95,54 @@ class Player:
 
         return True
 
-    def render_input(self):
-        msg = 'Enter position> '
-        val = input(msg)
+    def parse_input(self, val):
+        result = self.validate_input(val)
 
-        try:
-            while not self.validate_input(val):
-                val = input(msg)
-        except Exception as msg:
-            print(msg)
+        if result is None:
+            raise Exception('Invalid move!')
 
         return self.char_letter, self.char_number,
+
+
+class Menu:
+    def parse_input(self, cmd):
+        if cmd in self.cmds:
+            return self.cmds[cmd]
+
+        return None
+
+    def endgame_cmd(self):
+        """end - End game."""
+
+        self.game.endgame()
+
+    def restart_game_cmd(self):
+        """restart - Restart the game."""
+
+        self.game.reset()
+
+    def exit_app_cmd(self):
+        """exit - Exit from the app."""
+
+        self.game.endgame()
+        sys.exit(0)
+
+    def help_cmd(self):
+        """help - app usage"""
+
+        print('Usage:')
+        cmds = ["%s" % (str(getattr(self, cmd).__doc__)) for cmd in dir(self) if '_cmd' in cmd]
+        print('\n'.join(cmds))
+
+    def __init__(self, game):
+        self.game = game
+
+        self.cmds = {
+            'end': self.endgame_cmd,
+            'restart': self.restart_game_cmd(),
+            'exit': self.exit_app_cmd,
+            'help': self.help_cmd,
+        }
 
 
 class Game:
@@ -115,7 +153,11 @@ class Game:
 
         self.board = Board()
         self.player = Player()
+        self.menu = Menu(self)
         self.init_game()
+
+    def endgame(self):
+        self.game_over()
 
     def reset(self):
         self.game_state = True
@@ -129,14 +171,36 @@ class Game:
         print('Game Over!')
         # TODO: print stats
 
-    def process_move(self):
+    def process_move(self, moves):
         print('Doing action stub...')
+
+    def parse_cmd(self, val):
+        result = self.menu.parse_input(val)
+
+        if result:
+            result()
+
+        if not result:
+            moves = self.player.parse_input(val)
+
+            if moves:
+                self.process_move(moves)
+
+    def input_loop(self):
+        msg = '> '
+        val = input(msg)
+
+        try:
+            while not self.parse_cmd(val):
+                val = input(msg)
+        except Exception as msg:
+            print(msg)
+
+        return val
 
     def main_loop(self):
         while self.game_state:
-            self.position = self.player.render_input()
-
-            self.process_move()
+            self.input_loop()
 
             # Temporal code to simulate game over
             if self.available_moves == 0:
