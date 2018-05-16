@@ -5,7 +5,6 @@ import string
 horizontal_letters = range(1, 11)
 vertical_letters = string.ascii_uppercase
 
-game_state = True
 
 class Board:
     def __init__(self):
@@ -19,6 +18,12 @@ class Board:
         self.board = []
 
         self.build_board()
+
+    def reset(self):
+        pass
+
+    def calc_free_moves(self):
+        return self.X * self.Y
 
     def build_board(self):
         for x in range(self.X):
@@ -56,75 +61,106 @@ class Board:
         sqrs = 4
 
 
-def print_invalid_err():
-    print('Invalid input !')
+class Player:
+    def __init__(self):
+        self.score = 0
+
+    def reset(self):
+        self.score = 0
+
+    def print_invalid_err(self):
+        print('Invalid input !')
+
+    def validate_input(self, val):
+        if len(val) < 2:
+            self.print_invalid_err()
+            return False
+
+        try:
+            self.char_letter, self.char_number = re.split('(\d+)', val)[:-1]
+        except:
+            self.print_invalid_err()
+            return False
+
+        if self.char_letter == '' or self.char_letter == False or self.char_letter == None or self.char_letter.upper().strip() not in vertical_letters:
+            self.print_invalid_err()
+            return False
+
+        num = int(self.char_number) if self.char_number.isdigit() else None
+
+        if num not in list(horizontal_letters):
+            self.print_invalid_err()
+            return False
+
+        return True
+
+    def render_input(self):
+        msg = 'Enter position> '
+        val = input(msg)
+
+        try:
+            while not self.validate_input(val):
+                val = input(msg)
+        except Exception as msg:
+            print(msg)
+
+        return self.char_letter, self.char_number,
 
 
-def validate_input(val):
-    if len(val) < 2:
-        print_invalid_err()
-        return False
+class Game:
+    def __init__(self):
+        self.game_state = True
+        self.available_moves = 0
+        self.position = -1
 
-    try:
-        char_a, char_b = re.split('(\d+)', val)[:-1]
-    except:
-        print_invalid_err()
-        return False
+        self.board = Board()
+        self.player = Player()
+        self.init_game()
 
-    if char_a == '' or char_a == False or char_a == None or char_a.upper().strip() not in vertical_letters:
-        print_invalid_err()
-        return False
+    def reset(self):
+        self.game_state = True
+        self.available_moves = 0
+        self.position = -1
 
-    num = int(char_b) if char_b.isdigit() else None
+        self.board.reset()
+        self.player.reset()
 
-    if num not in list(horizontal_letters):
-        print_invalid_err()
-        return False
+    def game_over(self):
+        print('Game Over!')
+        # TODO: print stats
 
-    return True
+    def process_move(self):
+        print('Doing action stub...')
 
+    def main_loop(self):
+        while self.game_state:
+            self.position = self.player.render_input()
 
-def render_input():
-    msg = 'Enter position> '
-    val = input(msg)
+            self.process_move()
 
-    try:
-        while not validate_input(val):
-            val = input(msg)
-    except Exception as msg:
-        print(msg)
+            # Temporal code to simulate game over
+            if self.available_moves == 0:
+                self.game_state = False
+                break
 
-    return val
+            self.available_moves -= 1
+        else:
+            self.game_over()
 
+    def draw_banner(self):
+        print("Let's play Battleship!")
 
-def game_over():
-    print('Game Over!')
-    # TODO: print stats
+    def init_game(self):
+        # self.available_moves = self.board.calc_free_moves()
+        self.available_moves = 5  # For debug
 
+        # let's paint some staff, shall we
+        self.draw_banner()
+        self.board.render()
 
-def main_loop():
-    global game_state
-    a = 0
-    while game_state:
-        val = render_input()
-
-        # Temporal code to simulate game over
-        if a == 3:
-            game_state = False
-        a += 1
-    else:
-        game_over()
-
-
-def init_game():
-    board = Board()
-
-    # starting the game and printing the board
-    print("Let's play Battleship!")
-
-    board.render()
-    main_loop()
+        # Load the main input system
+        self.main_loop()
 
 
 if __name__ == '__main__':
-    init_game()
+    Game()
