@@ -14,10 +14,31 @@ class Ship:
 
         self.x = 0
         self.y = 0
+        self.points = self.blocks
 
         self.blocks_data = {}
 
         self.randomize()
+
+    def hit(self, area):
+        area = area.upper()
+
+        if area in self.blocks_data:
+            is_already_hit = self.blocks_data[area]
+
+            if is_already_hit:
+                return None
+
+        try:
+
+            if area in self.blocks_data:
+                self.points -= 1
+                self.blocks_data[area] = True
+                return True
+        except Exception as e:
+            pass
+
+        return False
 
     def randomize(self):
         def fill_data():
@@ -26,7 +47,7 @@ class Ship:
                 if c[1]:
                     break
             else:
-                self.blocks_data = { b[0]: True for b in block_available}
+                self.blocks_data = {b[0]: False for b in block_available}
                 print(self.blocks_data)
 
                 return True
@@ -95,29 +116,25 @@ class Board:
 
         self.build_board()
 
-        self.ships = [
-            Battle(self),
-            Destroyer(self)
-        ]
+        self.ships = []
+
+        self.load_ships()
 
     def is_ship_in_sight(self, point):
-        if(self.board_map[point]):
+        if self.board_map[point]:
             return True
         return False
 
-    def all_free_spots(self, label):
-        is_free = len([l for l in self.board_map.keys() if l[0] == label]) > 0
-
-        if is_free:
-            return is_free
-
-        a = [s.blocks_data for s in self.ships]
-
     def reset(self):
-        pass
+        self.board_map = {}
+
+        self.board = []
+
+        self.build_board()
+        self.load_ships()
 
     def calc_free_moves(self):
-        return self.X * self.Y
+        return sum([s.points for s in self.ships])
 
     def build_board(self):
         self.board_map = {"%s%s" % (v, h): False for v in vertical_letters[:10] for h in horizontal_letters}
@@ -146,7 +163,6 @@ class Board:
 
             if cheat:
                 for idx_c, c in enumerate(row):
-                    x, y = idx_c, idx
                     if self.is_ship_in_sight('%s%s' %(self.alphabet[idx], idx_c + 1)):
                         row[idx_c] = self.ship_char
 
@@ -171,20 +187,34 @@ class Board:
 
         self.render(True)
 
-    def char_to_position(self, char):
-        return vertical_letters.index(char.upper())
-
     def hit(self, position):
         letter, x_pos = position
 
         label = '%s%s' % (letter, x_pos)
 
-        is_hit = self.is_spot_free([label])
+        hits = [s.hit(label) for s in self.ships]
+        is_hit = True in hits
+        is_miss = not True in hits and not None in hits
+        is_duplicate = None in hits
 
         if is_hit:
             print('bang!')
-        if not is_hit:
+            return True
+
+        if is_miss:
             print('Missed! - Sorry.')
+            return False
+
+        if is_duplicate:
+            print('Are you blind! - Already destroyed.')
+
+        return False
+
+    def load_ships(self):
+        self.ships = [
+            Battle(self),
+            Destroyer(self)
+        ]
 
 
 class Player:
@@ -236,11 +266,6 @@ class Menu:
 
         return None
 
-    def endgame_cmd(self):
-        """end - End game."""
-
-        self.game.endgame()
-
     def restart_game_cmd(self):
         """restart - Restart the game."""
 
@@ -253,12 +278,12 @@ class Menu:
         sys.exit(0)
 
     def cheat_cmd(self):
-        """cheat - Reveal enemy'e ships."""
+        """cheat - Reveal enemy's ships."""
 
         self.game.cheat()
 
     def help_cmd(self):
-        """help - app usage"""
+        """help - App usage (this menu)."""
 
         print('Usage:')
         cmds = ["%s" % (str(getattr(self, cmd).__doc__)) for cmd in dir(self) if '_cmd' in cmd]
@@ -268,7 +293,6 @@ class Menu:
         self.game = game
 
         self.cmds = {
-            'end': self.endgame_cmd,
             'restart': self.restart_game_cmd,
             'exit': self.exit_app_cmd,
             'cheat': self.cheat_cmd,
@@ -285,29 +309,33 @@ class Game:
         self.board = Board()
         self.player = Player()
         self.menu = Menu(self)
-        self.init_game()
-
-    def endgame(self):
-        self.game_over()
+        self.start_game()
 
     def reset(self):
         self.game_state = True
-        self.available_moves = 0
+        self.available_moves = self.board.calc_free_moves()
+
         self.position = -1
 
         self.board.reset()
         self.player.reset()
+
+        self.board.render()
 
     def cheat(self):
         self.board.reveal()
 
     def game_over(self):
         print('Game Over!')
+        self.reset()
         # TODO: print stats
 
     def process_move(self, moves):
-        self.board.hit(moves)
+        is_hit = self.board.hit(moves)
 
+        if is_hit:
+            self.available_moves -= 1
+            print(self.available_moves)
 
     def parse_cmd(self, val):
         result = self.menu.parse_input(val)
@@ -327,6 +355,8 @@ class Game:
 
         try:
             while not self.parse_cmd(val):
+                if self.available_moves == 0:
+                    self.game_over()
                 val = input(msg)
         except Exception as msg:
             print(msg)
@@ -349,9 +379,8 @@ class Game:
     def draw_banner(self):
         print("Let's play Battleship!")
 
-    def init_game(self):
-        # self.available_moves = self.board.calc_free_moves()
-        self.available_moves = 5  # For debug
+    def start_game(self):
+        self.available_moves = self.board.calc_free_moves()
 
         # let's paint some staff, shall we
         self.draw_banner()
