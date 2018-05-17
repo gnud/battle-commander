@@ -78,7 +78,7 @@ class Ship:
 
     def check(self, point):
         try:
-            if (point in self.blocks_data):
+            if point in self.blocks_data:
                 return True
         except:
             return False
