@@ -230,33 +230,41 @@ class Player:
     def validate_input(self, val):
         if len(val) < 2:
             self.print_invalid_err()
-            return False
+            return None
+
+        if not any(c.isalpha() for c in val):
+            self.print_invalid_err()
+            return None
 
         try:
             self.char_letter, self.char_number = re.split('(\d+)', val)[:-1]
         except:
             self.print_invalid_err()
-            return False
+            return None
 
         if self.char_letter == '' or self.char_letter == False or self.char_letter == None or self.char_letter.upper().strip() not in vertical_letters:
             self.print_invalid_err()
-            return False
+            return None
 
         num = int(self.char_number) if self.char_number.isdigit() else None
 
         if num not in list(horizontal_letters):
             self.print_invalid_err()
-            return False
+            return None
 
         return True
 
     def parse_input(self, val):
-        result = self.validate_input(val)
+        try:
+            result = self.validate_input(val)
 
-        if result is None:
-            raise Exception('Invalid move!')
+            if result is None:
+                raise Exception()
 
-        return self.char_letter, self.char_number,
+            return self.char_letter, self.char_number,
+        except:
+            raise Exception()
+
 
 
 class Menu:
@@ -274,7 +282,6 @@ class Menu:
     def exit_app_cmd(self):
         """exit - Exit from the app."""
 
-        self.game.endgame()
         sys.exit(0)
 
     def cheat_cmd(self):
