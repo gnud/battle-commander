@@ -171,12 +171,6 @@ class Board:
 
         self.render(True)
 
-    def construct_battleship(self):
-        sqrs = 5
-
-    def construct_destoyer(self):
-        sqrs = 4
-
     def char_to_position(self, char):
         return vertical_letters.index(char.upper())
 
