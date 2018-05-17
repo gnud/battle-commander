@@ -50,12 +50,11 @@ class Ship:
     def randomize(self):
         def fill_data():
             block_available = row[random_y:random_y + self.blocks]
-            for c in block_available:
-                if c[1]:
+            for ba in block_available:
+                if ba[1]:
                     break
             else:
                 self.blocks_data = {b[0]: False for b in block_available}
-                print(self.blocks_data)
 
                 return True
 
@@ -76,8 +75,6 @@ class Ship:
 
         for c in self.blocks_data.keys():
             self.board.occupy_spot(c)
-
-        print(self.blocks_data.keys())
 
     def check(self, point):
         try:
@@ -169,15 +166,16 @@ class Board:
         for idx, row in enumerate(self.board):
             self.render_v_labels(idx)
 
-            if cheat:
-                for idx_c, c in enumerate(row):
-                    label = '%s%s' % (self.alphabet[idx], idx_c + 1)
-                    if self.is_ship_in_sight(label):
-                        hits = [s.is_damaged(label) for s in self.ships]
-                        is_hit = True in hits
-                        symbol = self.ship_char if is_hit else self.ship_ghost
+            for idx_c, c in enumerate(row):
+                label = '%s%s' % (self.alphabet[idx], idx_c + 1)
+                if self.is_ship_in_sight(label):
+                    hits = [s.is_damaged(label) for s in self.ships]
+                    is_hit = True in hits
 
-                        row[idx_c] = symbol
+                    ghost_or_cloak = self.ship_ghost if cheat else self.cloaked_symbol
+                    symbol = self.ship_char if is_hit else ghost_or_cloak
+
+                    row[idx_c] = symbol
 
             print(" ".join(row))
 
@@ -237,7 +235,8 @@ class Player:
     def reset(self):
         self.score = 0
 
-    def print_invalid_err(self):
+    @staticmethod
+    def print_invalid_err():
         print('Invalid input !')
 
     def validate_input(self, val):
@@ -346,7 +345,7 @@ class Game:
 
     def game_over(self):
         print('Game Over!')
-        self.reset()
+        self.menu.exit_app_cmd()
         # TODO: print stats
 
     def process_move(self, moves):
@@ -354,7 +353,6 @@ class Game:
 
         if is_hit:
             self.available_moves -= 1
-            print(self.available_moves)
 
     def parse_cmd(self, val):
         result = self.menu.parse_input(val)
@@ -367,6 +365,7 @@ class Game:
 
             if moves:
                 self.process_move(moves)
+                self.board.render()
 
     def input_loop(self):
         msg = '> '
@@ -385,13 +384,6 @@ class Game:
     def main_loop(self):
         while self.game_state:
             self.input_loop()
-
-            # Temporal code to simulate game over
-            if self.available_moves == 0:
-                self.game_state = False
-                break
-
-            self.available_moves -= 1
         else:
             self.game_over()
 
