@@ -20,6 +20,13 @@ class Ship:
 
         self.randomize()
 
+    def is_damaged(self, area):
+        if area in self.blocks_data:
+            is_hit = self.blocks_data[area]
+
+            if is_hit:
+                return True
+
     def hit(self, area):
         area = area.upper()
 
@@ -107,7 +114,8 @@ class Board:
         self.alphabet = vertical_letters
         self.nums = horizontal_letters
         self.cloaked_symbol = "."
-        self.ship_char = '='
+        self.ship_ghost = '='
+        self.ship_char = 'X'
         self.X = 10
         self.Y = 10
         self.board_map = {}
@@ -163,8 +171,13 @@ class Board:
 
             if cheat:
                 for idx_c, c in enumerate(row):
-                    if self.is_ship_in_sight('%s%s' %(self.alphabet[idx], idx_c + 1)):
-                        row[idx_c] = self.ship_char
+                    label = '%s%s' % (self.alphabet[idx], idx_c + 1)
+                    if self.is_ship_in_sight(label):
+                        hits = [s.is_damaged(label) for s in self.ships]
+                        is_hit = True in hits
+                        symbol = self.ship_char if is_hit else self.ship_ghost
+
+                        row[idx_c] = symbol
 
             print(" ".join(row))
 
@@ -198,7 +211,7 @@ class Board:
         is_duplicate = None in hits
 
         if is_hit:
-            print('bang!')
+            print('Bang!')
             return True
 
         if is_miss:
@@ -264,7 +277,6 @@ class Player:
             return self.char_letter, self.char_number,
         except:
             raise Exception()
-
 
 
 class Menu:
