@@ -5,6 +5,13 @@ import unittest
 import app
 
 
+def capture_stdout(obj):
+    temp_stdout = StringIO()
+    with contextlib.redirect_stdout(temp_stdout):
+        obj()
+    output = temp_stdout.getvalue().strip()
+    return output
+
 class TestShips(unittest.TestCase):
     def setUp(self):
         self.board = app.Board()
@@ -62,22 +69,19 @@ class TestMenu(unittest.TestCase):
 
 
 class TestGame(unittest.TestCase):
-    def fake_start(self):
+    def fake_loop(self):
         pass
 
     def patch_start(self):
-        app._start_game = app.Game.start_game
-        app.Game.start_game = self.fake_start
+        app.Game.main_loop = self.fake_loop
 
     def setUp(self):
         self.patch_start()
-        self.game = app.Game()
+
+        # We don't like to see startup messages
+        with contextlib.redirect_stdout(None):
+            self.game = app.Game()
 
     def test_banner(self):
-        temp_stdout = StringIO()
-
-        with contextlib.redirect_stdout(temp_stdout):
-            self.game.draw_banner()
-
-        output = temp_stdout.getvalue().strip()
+        output = capture_stdout(self.game.draw_banner)
         self.assertEqual("Let's play Battleship!", output)
