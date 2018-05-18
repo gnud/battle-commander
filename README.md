@@ -1,5 +1,7 @@
 # Battle commander
 
+.. image:: coverage.svg    
+
 More about the game: [Battleship](https://en.wikipedia.org/wiki/Battleship_%28game%29).
 
 Requirements:
