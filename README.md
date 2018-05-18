@@ -1,6 +1,8 @@
 # Battle commander
 
-.. image:: coverage.svg    
+
+![Coverage](coverage.svg)
+![Travis](https://travis-ci.org/gnud/battle-commander.svg?branch=master)
 
 More about the game: [Battleship](https://en.wikipedia.org/wiki/Battleship_%28game%29).
 
