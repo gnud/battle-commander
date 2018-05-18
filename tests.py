@@ -65,9 +65,12 @@ class TestGame(unittest.TestCase):
     def fake_start(self):
         pass
 
-    def setUp(self):
+    def patch_start(self):
         app._start_game = app.Game.start_game
         app.Game.start_game = self.fake_start
+
+    def setUp(self):
+        self.patch_start()
         self.game = app.Game()
 
     def test_banner(self):
